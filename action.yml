@@ -22,3 +22,10 @@ runs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
+
+    - name: Download Ninja
+      shell: pwsh
+      run: |
+        Invoke-WebRequest 'https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip' -OutFile "${env:RUNNER_TEMP}\ninja-win.zip"
+        Expand-Archive "${env:RUNNER_TEMP}\ninja-win.zip" -DestinationPath "${env:RUNNER_TEMP}\ninja-win"
+        Write-Output "${env:RUNNER_TEMP}\ninja-win" | Out-File "${env:GITHUB_PATH}" -Append
