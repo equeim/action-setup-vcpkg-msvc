@@ -5,6 +5,7 @@ runs:
   steps:
     - name: Extract vcpkg commit
       id: vcpkg_commit
+      shell: pwsh
       run: |
         $vcpkg_commit = Get-Content .\vcpkg-configuration.json | ConvertFrom-Json | Select-Object -ExpandProperty default-registry | Select-Object -ExpandProperty baseline
         Write-Output "vcpkg commit is $vcpkg_commit"
