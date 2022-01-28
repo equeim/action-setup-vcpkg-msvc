@@ -1,0 +1,23 @@
+name: 'Set up vcpkg and MSVC environment'
+
+runs:
+  using: composite
+  steps:
+    - name: Extract vcpkg commit
+      id: vcpkg_commit
+      run: |
+        $vcpkg_commit = Get-Content .\vcpkg-configuration.json | ConvertFrom-Json | Select-Object -ExpandProperty default-registry | Select-Object -ExpandProperty baseline
+        Write-Output "vcpkg commit is $vcpkg_commit"
+        Write-Output "::set-output name=vcpkg_commit::$vcpkg_commit"
+
+    - name: Set up vcpkg
+      uses: lukka/run-vcpkg@v10
+      with:
+        vcpkgGitCommitId: ${{ steps.vcpkg_commit.outputs.vcpkg_commit }}
+        appendedCacheKey: ${{ hashFiles('vcpkg-configuration.json') }}
+        doNotCacheOnWorkflowFailure: true
+
+    - name: Set up MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
