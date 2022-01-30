@@ -12,10 +12,9 @@ runs:
         Write-Output "::set-output name=vcpkg_commit::$vcpkg_commit"
 
     - name: Set up vcpkg
-      uses: lukka/run-vcpkg@v10
+      uses: lukka/run-vcpkg@v10.1
       with:
         vcpkgGitCommitId: ${{ steps.vcpkg_commit.outputs.vcpkg_commit }}
-        appendedCacheKey: ${{ hashFiles('vcpkg-configuration.json') }}
         doNotCacheOnWorkflowFailure: true
 
     - name: Set up MSVC environment
