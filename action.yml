@@ -4,6 +4,9 @@ inputs:
   vcpkg-appended-cache-key:
     description: 'vcpkg appended cache key'
     default: ''
+  vcpkg-do-not-cache:
+    description: 'Disable vcpkg caching'
+    default: false
 
 runs:
   using: composite
@@ -21,6 +24,7 @@ runs:
       with:
         vcpkgGitCommitId: ${{ steps.vcpkg_commit.outputs.vcpkg_commit }}
         appendedCacheKey: ${{ inputs.vcpkg-appended-cache-key }}
+        doNotCache: ${{ inputs.vcpkg-do-not-cache }}
 
     - name: Set up MSVC environment
       uses: ilammy/msvc-dev-cmd@v1
