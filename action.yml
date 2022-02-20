@@ -42,3 +42,6 @@ runs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: x64
+
+    - name: Add clang-cl problem matcher
+      uses: equeim/clang-cl-problem-matcher@v1
