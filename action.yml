@@ -3,19 +3,40 @@ name: 'Set up vcpkg and MSVC environment'
 inputs:
   vcpkg-use-actions-cache:
     description: 'Use GitHub Actions cache for vcpkg'
-    default: true
+    default: 'true'
   vcpkg-appended-cache-key:
     description: 'Appended cache key for GitHub Actions vcpkg cache'
     default: ''
   vcpkg-use-github-packages:
     description: 'Use GitHub Packages for vcpkg binary cache'
-    default: false
+    default: 'false'
   vcpkg-github-packages-token:
     description: 'GitHub Actions token for GitHub packages authentication'
+  vcpkg-run-install:
+    description: 'Run vcpkg install'
+    default: 'false'
+  vcpkg-install-command:
+    description: 'vcpkg install command'
+    default: '[`install`, `--disable-metrics`, `--recurse`, `--clean-after-build`, `--triplet=x64-windows-static`, `--host-triplet=x64-windows-static`]'
 
 runs:
   using: composite
   steps:
+    - name: Set up MSVC environment
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: Add clang-cl problem matcher
+      uses: equeim/clang-cl-problem-matcher@v1
+
+    - name: Set up vcpkg GitHub Packages binary caching
+      if: inputs.vcpkg-use-github-packages == 'true'
+      shell: pwsh
+      run: |
+        nuget sources add -source 'https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json' -storepasswordincleartext -name 'GitHub' -username ${{ github.repository_owner }} -password '${{ inputs.vcpkg-github-packages-token }}'
+        Write-Output 'VCPKG_BINARY_SOURCES=clear;nuget,GitHub,readwrite' | Out-File "${env:GITHUB_ENV}" -Append
+
     - name: Extract vcpkg commit
       id: vcpkg_commit
       shell: pwsh
@@ -28,20 +49,7 @@ runs:
       uses: lukka/run-vcpkg@v10.1
       with:
         vcpkgGitCommitId: ${{ steps.vcpkg_commit.outputs.vcpkg_commit }}
-        appendedCacheKey: ${{ inputs.vcpkg-appended-cache-key }}
-        doNotCache: ${{ !inputs.vcpkg-use-actions-cache }}
-
-    - name: Set up vcpkg GitHub Packages binary caching
-      if: inputs.vcpkg-use-github-packages
-      shell: pwsh
-      run: |
-        nuget sources add -source 'https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json' -storepasswordincleartext -name 'GitHub' -username ${{ github.repository_owner }} -password '${{ inputs.vcpkg-github-packages-token }}'
-        Write-Output 'VCPKG_BINARY_SOURCES=clear;nuget,GitHub,readwrite' | Out-File "${env:GITHUB_ENV}" -Append
-
-    - name: Set up MSVC environment
-      uses: ilammy/msvc-dev-cmd@v1
-      with:
-        arch: x64
-
-    - name: Add clang-cl problem matcher
-      uses: equeim/clang-cl-problem-matcher@v1
+        doNotCache: ${{ inputs.vcpkg-use-actions-cache == 'false' }}
+        appendedCacheKey: ${{ github.sha }}-${{ inputs.vcpkg-appended-cache-key }}
+        runVcpkgInstall: ${{ inputs.vcpkg-run-install == 'true' }}
+        runVcpkgFormatString: ${{ inputs.vcpkg-install-command }}
